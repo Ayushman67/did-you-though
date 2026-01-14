@@ -1,10 +1,10 @@
 'use client';
 
-import { useStore } from '@/lib/store';
+import { useData } from '@/lib/data-context';
 import { Clock, AlertTriangle, CheckCircle2, Layers } from 'lucide-react';
 
 export default function StatsCards() {
-  const { tasks } = useStore();
+  const { tasks } = useData();
 
   const openTasks = tasks.filter(t => t.status === 'Open').length;
   const highPriority = tasks.filter(t => t.priority === 'High' && t.status === 'Open').length;

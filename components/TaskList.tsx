@@ -1,14 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '@/lib/store';
-import { CheckCircle2, Circle, User, Calendar, ChevronDown } from 'lucide-react';
+import { useData, Task } from '@/lib/data-context';
+import { CheckCircle2, User, ChevronDown, Plus } from 'lucide-react';
+import EditableTask from './EditableTask';
 
 export default function TaskList() {
-  const { tasks, toggleTaskStatus } = useStore();
+  const { tasks, addTasks } = useData();
   const [statusFilter, setStatusFilter] = useState<'Open' | 'Done' | 'all'>('Open');
   const [ownerFilter, setOwnerFilter] = useState<string>('all');
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [newTask, setNewTask] = useState({
+    description: '',
+    owner: '',
+    dueDate: '',
+    priority: 'Med' as const,
+    initiative: 'General',
+  });
 
   const owners = Array.from(new Set(tasks.map(t => t.owner)));
 
@@ -18,10 +27,29 @@ export default function TaskList() {
     return true;
   });
 
-  const priorityStyles = {
-    High: 'badge-danger',
-    Med: 'badge-warning',
-    Low: 'badge-success',
+  const handleAddTask = () => {
+    if (!newTask.description.trim()) return;
+    
+    addTasks([{
+      id: `T-${Date.now()}`,
+      description: newTask.description,
+      owner: newTask.owner || 'Unassigned',
+      dueDate: newTask.dueDate || 'TBD',
+      priority: newTask.priority,
+      initiative: newTask.initiative || 'General',
+      status: 'Open',
+      sourceMeeting: 'Manual',
+      createdAt: new Date().toISOString(),
+    }]);
+    
+    setNewTask({
+      description: '',
+      owner: '',
+      dueDate: '',
+      priority: 'Med',
+      initiative: 'General',
+    });
+    setIsAddingTask(false);
   };
 
   return (
@@ -89,6 +117,79 @@ export default function TaskList() {
         </div>
       </div>
 
+      {/* Add Task Button */}
+      {!isAddingTask && (
+        <button
+          onClick={() => setIsAddingTask(true)}
+          className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-dashed border-border text-xs font-medium text-text-muted hover:border-accent hover:text-accent hover:bg-accent-light/30 transition-colors mb-3"
+        >
+          <Plus className="w-4 h-4" />
+          Add Task Manually
+        </button>
+      )}
+
+      {/* New Task Form */}
+      {isAddingTask && (
+        <div className="p-4 rounded-lg border-2 border-accent bg-accent-light/30 mb-3">
+          <div className="mb-3">
+            <textarea
+              value={newTask.description}
+              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+              rows={2}
+              className="input text-sm resize-none"
+              placeholder="What needs to be done?"
+              autoFocus
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <input
+              type="text"
+              value={newTask.owner}
+              onChange={(e) => setNewTask({ ...newTask, owner: e.target.value })}
+              className="input text-sm"
+              placeholder="Owner"
+            />
+            <input
+              type="date"
+              value={newTask.dueDate}
+              onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+              className="input text-sm"
+            />
+            <select
+              value={newTask.priority}
+              onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'High' | 'Med' | 'Low' })}
+              className="input text-sm"
+            >
+              <option value="High">High</option>
+              <option value="Med">Med</option>
+              <option value="Low">Low</option>
+            </select>
+            <input
+              type="text"
+              value={newTask.initiative}
+              onChange={(e) => setNewTask({ ...newTask, initiative: e.target.value })}
+              className="input text-sm"
+              placeholder="Initiative"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleAddTask}
+              disabled={!newTask.description.trim()}
+              className="flex-1 px-3 py-2 rounded-md text-xs font-medium bg-accent text-white hover:bg-accent-dark transition-colors disabled:opacity-50"
+            >
+              Add Task
+            </button>
+            <button
+              onClick={() => setIsAddingTask(false)}
+              className="px-3 py-2 rounded-md text-xs font-medium bg-white border border-border text-text-secondary hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Task List */}
       <div className="space-y-2 max-h-80 overflow-y-auto">
         {filteredTasks.length === 0 ? (
@@ -98,50 +199,7 @@ export default function TaskList() {
           </div>
         ) : (
           filteredTasks.map((task) => (
-            <div
-              key={task.id}
-              onClick={() => toggleTaskStatus(task.id)}
-              className={`
-                group flex items-start gap-3 p-3 rounded-lg border cursor-pointer
-                transition-all duration-150
-                ${task.status === 'Done'
-                  ? 'bg-gray-50 border-transparent'
-                  : 'border-border hover:border-accent hover:shadow-sm'
-                }
-              `}
-            >
-              <button className="mt-0.5 flex-shrink-0">
-                {task.status === 'Done' ? (
-                  <CheckCircle2 className="w-4.5 h-4.5 text-success" />
-                ) : (
-                  <Circle className="w-4.5 h-4.5 text-text-muted group-hover:text-accent transition-colors" />
-                )}
-              </button>
-
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm ${
-                  task.status === 'Done' 
-                    ? 'text-text-muted line-through' 
-                    : 'text-text-primary'
-                }`}>
-                  {task.description}
-                </p>
-                <div className="flex items-center gap-3 mt-1.5 text-xs text-text-muted">
-                  <span className="flex items-center gap-1">
-                    <User className="w-3 h-3" />
-                    {task.owner}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {task.dueDate}
-                  </span>
-                </div>
-              </div>
-
-              <span className={priorityStyles[task.priority]}>
-                {task.priority}
-              </span>
-            </div>
+            <EditableTask key={task.id} task={task} />
           ))
         )}
       </div>

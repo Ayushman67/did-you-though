@@ -1,6 +1,6 @@
 'use client';
 
-import { useStore } from '@/lib/store';
+import { useData } from '@/lib/data-context';
 import {
   PieChart,
   Pie,
@@ -18,7 +18,7 @@ import {
 const COLORS = ['#6366F1', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444'];
 
 export default function Charts() {
-  const { tasks } = useStore();
+  const { tasks } = useData();
 
   if (tasks.length === 0) {
     return null;

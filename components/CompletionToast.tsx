@@ -1,20 +1,32 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useStore } from '@/lib/store';
+import { useEffect, useState } from 'react';
+import { useData } from '@/lib/data-context';
 import { CheckCircle, X } from 'lucide-react';
 
 export default function CompletionToast() {
-  const { justCompleted, clearJustCompleted } = useStore();
+  const { tasks } = useData();
+  const [lastCompleted, setLastCompleted] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
 
+  // Track when a task gets completed
   useEffect(() => {
-    if (justCompleted) {
-      const timer = setTimeout(clearJustCompleted, 3000);
-      return () => clearTimeout(timer);
+    const doneTasks = tasks.filter(t => t.status === 'Done');
+    if (doneTasks.length > 0) {
+      const mostRecent = doneTasks.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0];
+      
+      if (mostRecent && mostRecent.description !== lastCompleted) {
+        setLastCompleted(mostRecent.description);
+        setShowToast(true);
+        const timer = setTimeout(() => setShowToast(false), 3000);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [justCompleted, clearJustCompleted]);
+  }, [tasks]);
 
-  if (!justCompleted) return null;
+  if (!showToast || !lastCompleted) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
@@ -24,10 +36,10 @@ export default function CompletionToast() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-success">Task completed!</p>
-          <p className="text-xs text-text-muted truncate">{justCompleted}</p>
+          <p className="text-xs text-text-muted truncate">{lastCompleted}</p>
         </div>
         <button
-          onClick={clearJustCompleted}
+          onClick={() => setShowToast(false)}
           className="p-1 rounded-md hover:bg-gray-100 transition-colors"
         >
           <X className="w-4 h-4 text-text-muted" />

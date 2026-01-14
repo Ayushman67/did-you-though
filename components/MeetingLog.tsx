@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '@/lib/store';
+import { useData } from '@/lib/data-context';
 import { Calendar, FileText, Mic, ChevronDown, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export default function MeetingLog() {
-  const { meetings } = useStore();
+  const { meetings } = useData();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (meetings.length === 0) {

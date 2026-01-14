@@ -1,10 +1,10 @@
 'use client';
 
-import { useStore } from '@/lib/store';
+import { useData } from '@/lib/data-context';
 
 
 export default function Header() {
-  const { tasks } = useStore();
+  const { tasks } = useData();
   
   const openTasks = tasks.filter(t => t.status === 'Open').length;
   const highPriority = tasks.filter(t => t.priority === 'High' && t.status === 'Open').length;

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useStore, Task, Meeting } from '@/lib/store';
+import { useData, Task, Meeting } from '@/lib/data-context';
 import { FileText, Mic, Upload, Loader2, CheckCircle, Sparkles } from 'lucide-react';
+import ReviewModal from './ReviewModal';
 
 type InputMode = 'text' | 'audio';
 
@@ -16,8 +17,13 @@ export default function MeetingInput() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Review modal state
+  const [showReview, setShowReview] = useState(false);
+  const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
+  const [pendingMeeting, setPendingMeeting] = useState<Meeting | null>(null);
 
-  const { addTasks, addMeeting } = useStore();
+  const { addTasks, addMeeting } = useData();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -103,6 +109,8 @@ export default function MeetingInput() {
         initiative: t.initiative || 'General',
         status: 'Open',
         sourceMeeting: name,
+        sourceQuote: t.source_quote || undefined,
+        sourceSpeaker: t.source_speaker || undefined,
         createdAt: new Date().toISOString(),
       }));
 
@@ -115,20 +123,36 @@ export default function MeetingInput() {
         risks: result.risks || [],
       };
 
-      addTasks(newTasks);
-      addMeeting(newMeeting);
-
-      setSuccess(true);
-      setMeetingName('');
-      setNotes('');
-      setAudioFile(null);
-
-      setTimeout(() => setSuccess(false), 3000);
+      // Show review modal instead of auto-saving
+      setPendingTasks(newTasks);
+      setPendingMeeting(newMeeting);
+      setShowReview(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Processing failed');
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleConfirmReview = (tasks: Task[], meeting: Meeting) => {
+    addTasks(tasks);
+    addMeeting(meeting);
+    
+    setShowReview(false);
+    setPendingTasks([]);
+    setPendingMeeting(null);
+    setSuccess(true);
+    setMeetingName('');
+    setNotes('');
+    setAudioFile(null);
+
+    setTimeout(() => setSuccess(false), 3000);
+  };
+
+  const handleCloseReview = () => {
+    setShowReview(false);
+    setPendingTasks([]);
+    setPendingMeeting(null);
   };
 
   return (
@@ -259,6 +283,17 @@ export default function MeetingInput() {
           </>
         )}
       </button>
+
+      {/* Review Modal */}
+      {showReview && pendingMeeting && (
+        <ReviewModal
+          isOpen={showReview}
+          onClose={handleCloseReview}
+          onConfirm={handleConfirmReview}
+          extractedTasks={pendingTasks}
+          extractedMeeting={pendingMeeting}
+        />
+      )}
     </div>
   );
 }

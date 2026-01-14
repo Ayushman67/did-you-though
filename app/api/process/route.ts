@@ -15,7 +15,9 @@ Return ONLY valid JSON in this exact format:
       "owner": "Person's full name or 'Unassigned'",
       "due_date": "YYYY-MM-DD or 'TBD'",
       "priority": "High" | "Med" | "Low",
-      "initiative": "Project/category name or 'General'"
+      "initiative": "Project/category name or 'General'",
+      "source_quote": "The exact quote from the transcript that this task came from",
+      "source_speaker": "Name of the person who said it"
     }
   ],
   "decisions": ["Decision 1", "Decision 2"],
@@ -30,6 +32,8 @@ Guidelines:
 - Group related tasks under initiatives/projects
 - Capture key decisions made during the meeting
 - Identify risks, concerns, or blockers mentioned
+- IMPORTANT: For each task, include the exact quote from the transcript that generated it
+- Include who said the quote (source_speaker)
 
 Return ONLY the JSON object, no markdown or explanation.`;
 

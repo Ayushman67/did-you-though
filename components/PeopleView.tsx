@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '@/lib/store';
-import { CheckCircle2, Circle, Calendar, Copy, Check } from 'lucide-react';
+import { useData } from '@/lib/data-context';
+import { Calendar, Copy, Check } from 'lucide-react';
+import EditableTask from './EditableTask';
 
 export default function PeopleView() {
-  const { tasks, toggleTaskStatus } = useStore();
+  const { tasks } = useData();
   const [selectedOwner, setSelectedOwner] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -46,12 +47,6 @@ Thanks!`;
     navigator.clipboard.writeText(generateFollowUp());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const priorityStyles = {
-    High: 'badge-danger',
-    Med: 'badge-warning',
-    Low: 'badge-success',
   };
 
   if (owners.length === 0) {
@@ -150,43 +145,7 @@ Thanks!`;
             {/* Tasks */}
             <div className="space-y-2 max-h-64 overflow-y-auto mb-6">
               {ownerTasks.map((task) => (
-                <div
-                  key={task.id}
-                  onClick={() => toggleTaskStatus(task.id)}
-                  className={`
-                    group flex items-center gap-3 p-3 rounded-lg border cursor-pointer
-                    transition-all duration-150
-                    ${task.status === 'Done'
-                      ? 'bg-gray-50 border-transparent'
-                      : 'border-border hover:border-accent hover:shadow-sm'
-                    }
-                  `}
-                >
-                  <button className="flex-shrink-0">
-                    {task.status === 'Done' ? (
-                      <CheckCircle2 className="w-4.5 h-4.5 text-success" />
-                    ) : (
-                      <Circle className="w-4.5 h-4.5 text-text-muted group-hover:text-accent transition-colors" />
-                    )}
-                  </button>
-
-                  <p className={`flex-1 text-sm truncate ${
-                    task.status === 'Done'
-                      ? 'text-text-muted line-through'
-                      : 'text-text-primary'
-                  }`}>
-                    {task.description}
-                  </p>
-
-                  <span className="text-xs text-text-muted flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {task.dueDate}
-                  </span>
-
-                  <span className={priorityStyles[task.priority]}>
-                    {task.priority}
-                  </span>
-                </div>
+                <EditableTask key={task.id} task={task} showOwner={false} />
               ))}
             </div>
 
