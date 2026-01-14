@@ -11,11 +11,17 @@ export default function TaskList() {
   const [ownerFilter, setOwnerFilter] = useState<string>('all');
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
-  const [newTask, setNewTask] = useState({
+  const [newTask, setNewTask] = useState<{
+    description: string;
+    owner: string;
+    dueDate: string;
+    priority: 'High' | 'Med' | 'Low';
+    initiative: string;
+  }>({
     description: '',
     owner: '',
     dueDate: '',
-    priority: 'Med' as const,
+    priority: 'Med',
     initiative: 'General',
   });
 
